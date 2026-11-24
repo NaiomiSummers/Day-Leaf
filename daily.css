@@ -1,0 +1,118 @@
+.daily-editor, .medications-view { min-width: 0; }
+.daily-editor .card-head, .medications-view .card-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+}
+.daily-editor h2, .medications-view h2, .daily-editor h3, .medications-view h3 { margin: 0; }
+.daily-ratings .card-head p, .med-schedule .card-head p { margin: 5px 0 0; }
+.daily-editor .rating-glyph, .daily-section-icon {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 12px; color: #426955; background: #edf3e9;
+}
+.daily-ratings { overflow: hidden; container-type: inline-size; }
+.daily-ratings .card-head { margin-bottom: 19px; }
+.daily-scale { min-width: 0; padding: 0; margin: 0; border: 0; }
+.daily-scale + .daily-scale { margin-top: 20px; }
+.daily-scale legend { padding: 0; margin-bottom: 9px; font-size: .95rem; font-weight: 650; }
+.score-choices { display: grid; grid-template-columns: repeat(10,minmax(0,1fr)); gap: 7px; }
+.daily-editor .score-choice {
+  min-width: 0; min-height: 46px; padding: 0; border: 1px solid #cbd7cb; border-radius: 9px;
+  background: #f8faf6; color: #314b41; font: inherit; font-weight: 600;
+  font-variant-numeric: tabular-nums; cursor: pointer; touch-action: manipulation;
+}
+.daily-editor .score-choice[aria-pressed="true"] { color: white; border-color: #305844; background: #305844; box-shadow: inset 0 0 0 1px #305844; }
+@media (hover: hover) {
+  .daily-editor .score-choice:hover { border-color: #50795d; }
+  .daily-section > summary:hover { background: #f7faf5; }
+}
+.scale-captions { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .75rem; color: #58665c; }
+.daily-sections-heading, .daily-subhead, .daily-save, .dose-line { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.daily-sections-heading { margin: 25px 0 12px; }
+.daily-sections-heading > .muted { font-size: .8rem; }
+.daily-sections {
+  background: white; border: 1px solid #d9e1d5; border-radius: 16px; overflow: clip;
+}
+.daily-section + .daily-section { border-top: 1px solid #e2e8e0; }
+.daily-section > summary {
+  list-style: none; display: flex; align-items: center; gap: 13px; min-height: 72px;
+  padding: 15px 21px; cursor: pointer;
+}
+.daily-section > summary::-webkit-details-marker { display: none; }
+.daily-section:nth-child(3n + 1) .daily-section-icon { background: #edf0f6; color: #596381; }
+.daily-section:nth-child(3n) .daily-section-icon { background: #f8f1e3; color: #8b7044; }
+.daily-section-heading, .dose-line > div, .med-plan > div { display: grid; gap: 3px; min-width: 0; }
+.daily-section-heading strong, .daily-save strong, .dose-line strong, .med-plan strong { font-weight: 650; }
+.daily-section-heading small, .daily-save small, .dose-line small, .med-plan small, .med-history small {
+  display: block; font-size: .82rem; color: #58665c; overflow-wrap: anywhere;
+}
+.daily-chevron { margin: 0 4px 4px auto; flex-shrink: 0; width: 8px; height: 8px; border: solid #6b7d70; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+.daily-section[open] .daily-chevron { transform: rotate(225deg); margin-top: 5px; }
+.daily-section-content { display: grid; gap: 16px; padding: 0 23px 23px; }
+.daily-section-content > .muted { margin: 0; }
+.daily-section-content [hidden], .daily-editor [hidden] { display: none !important; }
+.daily-editor input, .daily-editor select, .daily-editor textarea, .medications-view input, .medications-view select, .medications-view textarea {
+  min-width: 0; max-width: 100%; box-sizing: border-box;
+}
+.daily-editor .field, .medications-view .field { min-width: 0; }
+.daily-editor .field > :is(input,select,textarea), .medications-view .field > :is(input,select,textarea) { width: 100%; min-height: 44px; }
+.daily-editor .grid-2, .medications-view .grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.daily-editor [data-bed-summary]:empty { display: none; }
+.bed-calculation { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 2px 12px; background: #f1f6ed; border-radius: 8px; }
+.daily-link {
+  color: #315e46; font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 8px 2px; min-height: 44px; background: transparent; border: none; text-decoration: underline;
+  text-underline-offset: 3px; cursor: pointer; text-align: left;
+}
+.activity-list, .substance-row { display: grid; gap: 14px; }
+.activity-item, .dose-row, .prn-row { border: 1px solid #dfe5dc; border-radius: 10px; padding: 14px; min-width: 0; }
+.daily-subdetails > summary { cursor: pointer; padding: 10px 0; min-height: 44px; color: #45614f; font-size: .87rem; }
+.daily-subdetails > .grid-2 { margin-top: 5px; }
+.dose-row + .dose-row, .prn-row + .prn-row { margin-top: 12px; }
+.dose-line > .field { min-width: 140px; }
+.dose-line strong, .med-plan strong, .med-history strong { overflow-wrap: anywhere; }
+.prn-row legend, .med-weekdays legend { padding: 0 3px; font-weight: 600; }
+.daily-section-content > [data-add-prn], .daily-section-content > [data-add-doses] { justify-self: start; }
+.daily-section-content > [data-prns]:empty { display: none; }
+.daily-save {
+  margin-top: 18px; padding: 16px 20px; border-radius: 14px; border: 1px solid #d8e2d5; background: #f0f5ec;
+}
+.daily-save small { margin-top: 4px; }
+.daily-editor [data-cssrs-host]:not(:empty) { margin-top: 18px; }
+.daily-warning, .med-form-error { color: #844523; font-size: .9rem; }
+.med-form-error:empty { display: none; }
+.med-plan { display: flex; align-items: center; gap: 12px; padding: 17px 0; border-top: 1px solid #e2e8de; }
+.med-plan .btn { margin-left: auto; }
+.med-plan:last-child { padding-bottom: 0; }
+.med-plan .daily-section-icon { background: #f8f1e3; color: #8b7044; }
+.med-empty { padding: 14px; border-radius: 10px; background: #f5f7f2; color: #59675c; font-size: .93rem; }
+.med-form { margin-top: 16px; border-top: 1px solid #dde6d9; padding-top: 18px; }
+.med-weekdays { min-width: 0; padding: 0; margin: 0; border: none; }
+.med-weekdays legend { padding: 0; font-size: .92rem; }
+.med-weekdays > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.med-weekdays label { display: flex; gap: 6px; align-items: center; min-height: 44px; padding: 4px 10px; border: 1px solid #dce4d7; background: #fafbf8; border-radius: 9px; font-size: .88rem; }
+.med-weekdays input { width: 17px; height: 17px; accent-color: #365b43; }
+.med-history { margin: 0; padding: 0; list-style: none; }
+.med-history li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 18px; padding: 14px 0; border-top: 1px solid #e2e8de; }
+.med-history-date { color: #58665c; font-size: .86rem; }
+.med-history small { margin-top: 4px; }
+.med-history p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.med-history .daily-link { margin-left: auto; }
+.reminder-steps { margin: 0; padding-left: 1.3em; }
+.reminder-steps li + li { margin-top: 8px; }
+@media (max-width: 770px) {
+  .score-choices { grid-template-columns: repeat(5,minmax(0,1fr)); }
+}
+@container (max-width: 525px) {
+  .score-choices { grid-template-columns: repeat(5,minmax(0,1fr)); }
+}
+@media (max-width: 620px) {
+  .daily-section-content { padding: 0 14px 18px; }
+  .daily-section > summary { padding: 13px 15px; }
+  .daily-subhead, .daily-save, .medications-view .card-head { flex-wrap: wrap; }
+  .daily-editor .grid-2, .medications-view .grid-2 { grid-template-columns: minmax(0,1fr); }
+  .daily-save .btn { width: 100%; }
+  .dose-line, .med-plan { flex-wrap: wrap; }
+  .medications-view .med-plan .btn { margin-left: 0; }
+  .med-history li { align-items: flex-start; flex-direction: column; }
+  .med-history .daily-link { margin-left: 0; }
+  .daily-editor input, .daily-editor select, .daily-editor textarea, .medications-view input, .medications-view select, .medications-view textarea { font-size: 16px; }
+}
