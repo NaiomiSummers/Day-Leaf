@@ -191,7 +191,7 @@ for(const type of ['pointerdown','keydown','input','wheel','touchstart','click']
 // handoff covers the journal immediately and keeps the normal idle deadline.
 document.addEventListener('click',event=>{
   if(!opened || !event.isTrusted)return;
-  const native=event.target.closest('input[type=file],a[download],[data-print]');
+  const native=event.target.closest('input[type=file],a[download],[data-print],[data-save-pdf]');
   nativeActionUntil=native ? Date.now()+2000 : 0;
 },true);
 document.addEventListener('visibilitychange',()=>{

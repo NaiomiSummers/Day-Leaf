@@ -1,5 +1,6 @@
 // Local journal views. All date ranges are inclusive activity dates.
 import { requiredCssrs, scoreAnswers } from './assess.js';
+import { bindReportExport, reportExportControls } from './report-actions.js';
 const oneDay = 86400000;
 const activities = { shower: 'Shower', clothes: 'Change clothes', teeth: 'Brush teeth', school: 'Schoolwork', work: 'Paid work' };
 const activityStates = ['Done', 'Partly done', 'Not done', 'Not applicable'];
@@ -435,28 +436,38 @@ function optionalRecords(range) {
   const records = [];
   for (const r of range.cssrs) {
     const parts = [
-      {id:'record',label:'Completion and timeframe',value:[screenStatus(r), r.priorDate ? 'Previous completed assessment on ' + fmtDate(r.priorDate) : 'Previous assessment date not recorded'].join('. ')}
+      {label:'Completion',value:screenStatus(r)}
     ];
+    if (r.time) parts.push({label:'Assessment time',value:r.time});
+    if (r.priorDate) parts.push({label:'Previous completed assessment',value:fmtDate(r.priorDate) + (r.priorTime ? ' · ' + r.priorTime : '')});
     if (r.method === 'worksheet' && r.answers) {
       for (const key of requiredCssrs(r.formKey,r.answers)) {
         const answer = r.answers[key];
         if (!['yes','no'].includes(answer)) continue;
         const label = key === 'q6recent' ? 'Item 6 follow-up · Past 3 months' : 'Item ' + key.slice(1) + ' response';
-        parts.push({id:key,label,value:answer});
+        parts.push({label,value:answer});
       }
     }
-    if (r.concern === true) parts.push({id:'concern',label:'Self-reported safety concern',value:'A concern was marked.'});
-    if (has(r.note)) parts.push({id:'note',label:'Personal note',value:r.note});
-    records.push({key:'cssrs-' + r.id,title:'C-SSRS · ' + (r.version || 'Version unspecified'),date:r.date,parts});
+    if (r.concern === true) parts.push({label:'Self-reported safety concern',value:'A concern was marked.'});
+    if (has(r.note)) parts.push({label:'Personal note',value:r.note});
+    records.push({key:'cssrs-' + r.id,title:r.version || 'C-SSRS',date:r.date,parts});
   }
   for (const r of range.workbook) {
     const t = templates[r.type];
     if (!t) continue;
     const parts = t.fields.flatMap(([id,label]) => {
-      const value = id === 'links' ? (r.links || []).filter(has).map((text,i) => (i+1) + '. ' + text).join('\n') : r.answers?.[id];
-      return has(value) ? [{id,label,value}] : [];
+      const value = id === 'links' ? (r.links || []).flatMap((text,i) => has(text) ? [(i+1) + '. ' + text] : []).join('\n') : r.answers?.[id];
+      return has(value) ? [{label,value}] : [];
     });
-    if (parts.length) records.push({key:'dbt-' + r.id,title:t.title + (r.status === 'finished' ? '' : ' (draft)'),date:r.date,parts});
+    if (r.dailyDate) parts.unshift({label:'Linked daily entry',value:fmtDate(r.dailyDate)});
+    records.push({key:'dbt-' + r.id,title:t.title + (r.status === 'finished' ? '' : ' (draft)'),date:r.date,parts});
+  }
+  const counts = new Map();
+  for (const row of records) {
+    row.label = row.title + ' · ' + fmtDate(row.date);
+    const instance = (counts.get(row.label) || 0) + 1;
+    counts.set(row.label,instance);
+    if (instance > 1) row.label += ' (' + instance + ')';
   }
   return records;
 }
@@ -474,11 +485,11 @@ export function reportHtml(db, type, start, end, selected = new Set()) {
     body = metrics(r) + section('Daily self-ratings and sleep',ratingTable(r.days) + doctorSleep(r) + '<p>A dash marks an unanswered field. Daily ratings use a 1–10 scale.</p>') + section('Weekly assessments',clinicalReviews(r)) +
       section('Medications and effects',medLog(r)) + section('THC and alcohol',substanceLog(r)) + section('Treatment changes',medicineTimeline(r)) +
       (prompts.length ? section('Weekly reflections',table(['Review date','Patient notes'],prompts,'Weekly reflections')) : '');
-    const extra = optionalRecords(r).flatMap(row => {
-      const parts = row.parts.filter(part => selected.has(row.key + '/' + part.id));
-      return parts.length ? ['<h4>' + esc(fmtDate(row.date)) + ' · ' + esc(row.title) + '</h4>' + parts.map(p => '<p><b>' + esc(p.label) + '</b> · <span class="jr-preserve">' + esc(p.value) + '</span></p>').join('')] : [];
+    const extra = optionalRecords(r).filter(row => selected.has(row.key)).map(row => {
+      const answers = row.parts.map(p => '<p><b>' + esc(p.label) + '</b> · <span class="jr-preserve">' + esc(p.value) + '</span></p>').join('');
+      return '<h4>' + esc(row.label) + '</h4>' + (answers || empty('No answers recorded.'));
     }).join('');
-    if (extra) body += section('Selected additional details',extra);
+    body += section('Selected forms',extra || empty('No optional forms selected.'));
   } else {
     body = '<p><strong>' + r.days.length + ' of ' + dayCount(r.total) + ' logged</strong> · ' + dayCount(r.total - r.days.length) + ' without daily observations.</p>' + section('Functioning across the date range',functionChanges(r) + activityOverview(r)) +
       section('Dated activity examples',functioning(r)) + section('Treatment changes',medicineTimeline(r));
@@ -505,30 +516,44 @@ export function renderReports(ctx) {
   const type = root.querySelector('[data-report-type]');
   const optional = root.querySelector('[data-optional]');
   const preview = root.querySelector('[data-preview-area]');
+  let releaseExport = () => {};
+  function clearPreview() {
+    releaseExport();
+    releaseExport = () => {};
+    preview.replaceChildren();
+  }
   const message = root.querySelector('[data-range-message]');
   const previewBtn = root.querySelector('[data-preview]');
   function reset() {
-    preview.replaceChildren();
+    clearPreview();
     const range = rangeData(ctx.db,startInput.value,endInput.value);
     previewBtn.disabled = !range;
     message.textContent = range ? '' : 'Enter both dates, with From on or before Through.';
     if (!range || type.value !== 'doctor') { optional.replaceChildren(); return; }
     const choices = optionalRecords(range).map(row => {
-      const options = row.parts.map(part => '<label class="jr-check"><input type="checkbox" value="' + esc(row.key + '/' + part.id) + '"><span>' + esc(part.label) + '</span></label>').join('');
-      return '<fieldset class="jr-optional-group"><legend>' + esc(fmtDate(row.date)) + ' · ' + esc(row.title) + '</legend>' + options + '</fieldset>';
+      return '<label class="jr-check"><input type="checkbox" autocomplete="off" data-report-form value="' + esc(row.key) + '"><span>' + esc(row.label) + '</span></label>';
     }).join('');
-    optional.innerHTML = disclosure('Add selected C-SSRS or DBT details', choices ? '<p class="muted">Only checked details will appear in this report.</p>' + choices : empty('No C-SSRS or workbook details recorded in this range.'));
+    const controls = '<div class="row"><button type="button" class="btn secondary" data-select-all-forms>Select all forms</button><button type="button" class="btn secondary" data-clear-forms>Clear all</button></div>';
+    optional.innerHTML = disclosure('Add C-SSRS or DBT forms', choices ? '<p class="muted">Each selected form includes all its recorded answers.</p>' + controls + '<div class="jr-optional-group">' + choices + '</div>' : empty('No C-SSRS or DBT forms saved in this range.'));
   }
   type.onchange = reset;
   startInput.oninput = reset;
   endInput.oninput = reset;
-  optional.onchange = () => preview.replaceChildren();
+  optional.onchange = clearPreview;
+  optional.onclick = event => {
+    const button = event.target.closest('[data-select-all-forms], [data-clear-forms]');
+    if (!button) return;
+    for (const box of optional.querySelectorAll('[data-report-form]')) box.checked = button.hasAttribute('data-select-all-forms');
+    clearPreview();
+  };
   previewBtn.onclick = () => {
-    const selected = new Set([...optional.querySelectorAll('input:checked')].map(box => box.value));
+    const selected = new Set([...optional.querySelectorAll('[data-report-form]:checked')].map(box => box.value));
     const html = reportHtml(ctx.db,type.value,startInput.value,endInput.value,selected);
     if (!html) { reset(); return; }
-    preview.innerHTML = '<section class="card stack jr-controls"><div class="card-head"><h2 tabindex="-1" data-preview-heading>Report preview</h2><button type="button" class="btn primary" data-print>Print / Save PDF</button></div><p class="muted">Exported PDFs are not password-protected. On iPhone, open the print preview and choose Share → Save to Files → On My iPhone. On Android, choose Save as PDF in the print destination list and select a local folder.</p></section>' + html;
-    preview.querySelector('[data-print]').onclick = () => window.print();
+    clearPreview();
+    preview.innerHTML = reportExportControls + html;
+    const filename = 'Dayleaf-' + titles[type.value].replaceAll(' ', '-') + '-' + startInput.value + '-to-' + endInput.value + '.pdf';
+    releaseExport = bindReportExport(preview, filename, ctx.signal);
     preview.querySelector('[data-preview-heading]').focus();
   };
   reset();

@@ -52,6 +52,8 @@
 .jr-report h4 { margin: 16px 0 5px; }
 .jr-report ul { margin: 9px 0 15px; padding-left: 22px; }
 .jr-preserve { white-space: pre-wrap; }
+.jr-export-head { flex-wrap: wrap; align-items: center; }
+.jr-export-status:empty { display: none; }
 @media (max-width: 720px) {
   .jr-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .jr-library { grid-template-columns: minmax(0,1fr); }
