@@ -1,5 +1,5 @@
 const protocol = 'dayleaf-offline-v2';
-const build = '9c913beb82292945e211'; // generated offline build
+const build = '758d99d07686fdc7c825'; // generated offline build
 const scope = new URL('./', import.meta.url).href;
 const workerURL = new URL('sw.js', scope).href;
 

@@ -1,7 +1,7 @@
 // Only the immutable app files below can enter this cache.
 const protocol = 'dayleaf-offline-v2';
 // BEGIN GENERATED ASSETS
-const build = '9c913beb82292945e211';
+const build = '758d99d07686fdc7c825';
 const assetDigests = {
   "app.js": "28be34e91bae5dafc7b60ddb5d9335f0a0d95c2e4d7fdaef7b15c2c374a88eaf",
   "assess.css": "96353a77ef49cf38d479adf974a21943707cf13a2b0708cfe1abf81a26b2403b",
@@ -20,9 +20,9 @@ const assetDigests = {
   "forms/recent.pdf": "71be49140ae40dc18788696b89f2effdc25ac953e5ff5215c6bbf640bec290e0",
   "forms/recent.png": "896273eb2948881bdafa9d5323d0f9c3740cd3afe4ce04d96b5bfd0bcdec4a8e",
   "icons.js": "a41f15acdd285e6aa4f81ecab26086c22f830cfca1521bc96bd06ca76cef56d1",
-  "index.html": "170afe72e0ec96cec94154ecc6c9cfd13e08fac720320cd4bf5b9e02fe89450a",
+  "index.html": "2820dafec831592e2fc3ba673ef34880f21a9103f7c622363fcf11106c912b07",
   "manifest.webmanifest": "052343275c4760068a5bca5bcb37f99c25708e136fc4a2706ab87d28445c5d73",
-  "offline.js": "6b2541699c8214353600b475f4cb5a08cac74d82fbb268d969818b2d6875311d",
+  "offline.js": "b465acb05a70ddffbb3518cb1b8601ce50533bb1f32dedb44a332258caed8add",
   "pdf-export.js": "9202a45ae66d6f02fb926c8052f5ced44df370e1523ed23bce240e583da503ac",
   "report-actions.js": "c3cc801adfd889221232932e5961e1f318f7a8b29a21e98a4d08289f6e36d92d",
   "review.css": "daf1da400ea7156d7a668909146677db7ab8066b00de31ebf7b5b07811ce6298",
@@ -31,7 +31,14 @@ const assetDigests = {
   "settings.js": "0ec93f03d9701bea34a841b26bba44a713af81e2834b59e32e16030d9c134811",
   "store.js": "5349499e8e5aedbe557d990b82129b799d67c5e7f88cb4298daffaf70674027c",
   "style.css": "b444a51ad4387004520080e71ba9267cba286ebe71af50a03f0a6060cbf57685",
-  "vault-screen.js": "520a47cfc069f2b763c1d4e09d5b3198f10e53528ce0d7b55648a1d46235895a"
+  "vault-screen.js": "520a47cfc069f2b763c1d4e09d5b3198f10e53528ce0d7b55648a1d46235895a",
+  "terms.mjs": "8f1458db6cea6da84faa9137b4f0b71bbf333063f3d7cecb5ee2f8115490b63c",
+  "terms-ui.mjs": "dff63fc043e4924d2973275a3dad0747b7c1933dd32005c5828fc330c1fb8de4",
+  "terms-entry.mjs": "f1504d016107397cb57a3cdd60b6f5011f907d13fe9a29aa785025a573bfdf44",
+  "terms.css": "a5cf7e24afdc6712e8d38e145019049d520bfa180227be8a99c8c32971a28b91",
+  "terms.json": "9c65df8a622c7f716ec2939a969babdbedb3b45d9a6f8501bf17a27299c6ec61",
+  "privacy.html": "dc8d453e53dc6ad880237d5c6fd51994bcb079255792fd7a501f017444fa6444",
+  "privacy.css": "92056245293f8fd2f385fdd7cdab7aa3968f956ea4262274a15114ec35922996"
 };
 // END GENERATED ASSETS
 
@@ -46,7 +53,7 @@ async function validAsset(url, response) {
   if (!response || response.status !== 200 || response.type === 'opaque') return false;
   const name = assetURLs.get(url);
   if (!name) return false;
-  const bytes = /\.(html|css|js|webmanifest)$/.test(name)
+  const bytes = /\.(html|css|m?js|json|webmanifest)$/.test(name)
     ? new TextEncoder().encode((await response.text()).replace(/\r\n/g, '\n'))
     : await response.arrayBuffer();
   const hash = await crypto.subtle.digest('SHA-256', bytes);
@@ -128,6 +135,9 @@ async function servePDF(response, range) {
 }
 
 self.addEventListener('fetch', event => {
+  // Check the published agreement even while an older app shell controls this tab.
+  if (event.request.url === new URL('terms.json?current', self.registration.scope).href) return;
+
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   url.search = '';
